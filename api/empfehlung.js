@@ -3,6 +3,8 @@
 // Umgebungsvariablen: FIREBASE_SERVICE_ACCOUNT, RESEND_API_KEY, MAIL_FROM, optional MAIL_TO, ADMIN_URL
 import { db, COLLECTION } from "./_firebase.js";
 
+const CODES = process.env.FIRESTORE_CODES || "empfehler_codes_pfs";
+
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 const clip = (s, n = 200) => String(s ?? "").trim().slice(0, n);
 const person = p => ({ name: clip(p?.name, 120), telefon: clip(p?.telefon, 40), email: clip(p?.email, 160).toLowerCase(), ort: clip(p?.ort, 120) });
@@ -14,6 +16,19 @@ export default async function handler(req, res) {
   if (d.hp) return res.status(200).json({ ok: true }); // Spam-Falle
 
   const empfehler = person(d.empfehler), neukunde = person(d.neukunde);
+  const code = String(d.code || "").trim().slice(0, 12).toUpperCase();
+
+  // Bei Anmeldung über einen Empfehlungslink den hinterlegten Empfehler ergänzen
+  if (code) {
+    try {
+      const snap = await db.collection(CODES).doc(code).get();
+      if (snap.exists) {
+        const c = snap.data();
+        if (c.name) empfehler.name = clip(c.name, 120);
+        if (!empfehler.telefon && c.telefon) empfehler.telefon = clip(c.telefon, 40);
+      }
+    } catch (e) { console.error("Code-Auflösung", e); }
+  }
   if (!empfehler.name || !neukunde.name) return res.status(400).json({ ok: false, error: "Pflichtangaben fehlen" });
 
   // Dublettenprüfung: gleicher Neukunde (Telefon oder E-Mail) bereits vorhanden?
@@ -34,7 +49,7 @@ export default async function handler(req, res) {
     nachricht: clip(d.nachricht, 2000),
     einverstaendnis: !!d.einverstaendnis,
     geschaeft: !!d.geschaeft,
-    code: String(d.code || "").trim().slice(0, 12).toUpperCase() || null,
+    code: code || null,
     status: "neu",
     gsNeukunde: false, gsEmpfehler: false,
     duplikatVon,
@@ -62,7 +77,7 @@ export default async function handler(req, res) {
           ${duplikatVon ? `<p style="background:#FDF1EE;color:#C1503D;padding:8px 12px">Dieser Neukunde wurde bereits früher empfohlen. Bitte im Adminbereich prüfen.</p>` : ""}
           ${d.geschaeft ? `<p style="background:#FBF3E2;color:#8F6212;padding:8px 12px">Geschäftsempfehlung: Unterhaltsreinigung für Geschäftsräume.</p>` : ""}
           <p style="font-weight:bold;margin:0 0 6px">Neukunde</p><table>${row("Name", neukunde.name)}${row("Telefon", neukunde.telefon)}${row("E-Mail", neukunde.email)}${row("PLZ / Ort", neukunde.ort)}</table>
-          <p style="font-weight:bold;margin:16px 0 6px">Empfohlen von${d.code ? " (Code " + esc(clip(d.code, 12)) + ")" : ""}</p><table>${row("Name", empfehler.name)}${row("Telefon", empfehler.telefon)}${row("E-Mail", empfehler.email)}${row("PLZ / Ort", empfehler.ort)}</table>
+          <p style="font-weight:bold;margin:16px 0 6px">Empfohlen von${code ? " (Code " + esc(code) + ")" : ""}</p><table>${row("Name", empfehler.name)}${row("Telefon", empfehler.telefon)}${row("E-Mail", empfehler.email)}${row("PLZ / Ort", empfehler.ort)}</table>
           ${doc.nachricht ? `<p style="font-weight:bold;margin:16px 0 6px">Nachricht</p><p style="margin:0;white-space:pre-wrap">${esc(doc.nachricht)}</p>` : ""}
           ${adminLink}</div>`
       })
