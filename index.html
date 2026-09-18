@@ -126,7 +126,10 @@ a{color:var(--cs-tuerkis-text)}
 .codebereich .tile{padding:28px}
 .code-label{font-size:13px;font-weight:700;color:var(--cs-gedaempft);letter-spacing:.04em;margin:14px 0 6px}
 .code-anzeige{display:inline-flex;align-items:center;justify-content:center;gap:2px;font-family:var(--cs-titel);font-weight:600;font-size:clamp(30px,4vw,42px);letter-spacing:.14em;color:var(--cs-tuerkis-text);background:var(--cs-hell);border:1px dashed var(--cs-s4);border-radius:var(--cs-radius);padding:18px 28px;margin:6px 0 18px}
-.code-link{background:var(--cs-toenung);border:1px solid var(--cs-rahmen2);border-radius:var(--cs-radius-s);padding:12px 14px;font-size:14px;color:var(--cs-fliess);word-break:break-all;margin-bottom:16px}
+.code-link{display:flex;align-items:center;gap:10px;background:var(--cs-toenung);border:1px solid var(--cs-rahmen2);border-radius:var(--cs-radius-s);padding:14px 16px;margin-bottom:16px}
+.code-link::before{content:"";flex:none;width:18px;height:18px;background:no-repeat center/18px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231C7878' stroke-width='1.75' stroke-linecap='round'%3E%3Cpath d='M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1'/%3E%3Cpath d='M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1'/%3E%3C/svg%3E")}
+.code-link a{font-family:var(--cs-titel);font-weight:600;font-size:16px;color:var(--cs-tuerkis-text);text-decoration:none;word-break:break-word}
+.code-link a:hover{text-decoration:underline}
 @media (max-width:1024px){.codebereich{grid-template-columns:1fr}}
 @media (max-width:680px){.codebereich .tile{padding:22px}}
 
@@ -412,7 +415,7 @@ a{color:var(--cs-tuerkis-text)}
     code=c;
     $("codeErgebnis").hidden=false;
     $("codeWert").textContent=c;
-    $("codeLink").textContent=linkZuCode(c);
+    $("codeLink").innerHTML='<a href="'+linkZuCode(c)+'" target="_blank" rel="noopener">Mein Weiterempfehlungslink</a>';
     $("codeWa").href="https://wa.me/?text="+encodeURIComponent(nachricht(c));
     $("codeMail").href="mailto:?subject="+encodeURIComponent("Putzfrauenservice von Clean Service")+"&body="+encodeURIComponent(nachricht(c));
     window.MEINCODE=c;
