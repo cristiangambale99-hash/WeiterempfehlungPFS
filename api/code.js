@@ -20,7 +20,7 @@ export default async function handler(req, res) {
       if (!snap.exists) return res.status(404).json({ ok: false });
       const d = snap.data();
       await snap.ref.update({ aufrufe: (d.aufrufe || 0) + 1, zuletztAufgerufen: new Date().toISOString() });
-      return res.status(200).json({ ok: true, vorname: String(d.name || "").split(" ")[0] });
+      return res.status(200).json({ ok: true, name: String(d.name || ""), vorname: String(d.name || "").split(" ")[0] });
     }
 
     if (req.method === "POST") {
